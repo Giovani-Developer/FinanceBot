@@ -17,16 +17,23 @@ public class FinanceService {
 
     public String processMessage(String message, String user) {
 
+        String[] parts = message.split(" ");
+
+        String tipo = parts[0]; // gastei
+        double valor = Double.parseDouble(parts[1]); // valor gasto
+        String categoria = parts[2]; // onde ele gastou
+
+
         FinanceRecord record = new FinanceRecord();
         record.setUserPhone(user);
-        record.setTipo("gasto");
-        record.setValor(30.0);
-        record.setCategoria("message");
+        record.setTipo(tipo);
+        record.setValor(valor);
+        record.setCategoria(categoria);
 
 
         repository.save(record);
 
-        return "Anotado ✅ gasto de R$ 30.00 em mercado";
+        return "Anotado!!" + tipo + " de R$ " + valor + " em " + categoria;
     }
 
 }

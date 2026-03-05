@@ -1,14 +1,13 @@
 package com.financebot.whats.controller;
 
 
+import com.financebot.whats.dto.FinanceMessageDTO;
 import com.financebot.whats.service.FinanceService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/finance")
+@CrossOrigin(origins = "*")
 public class WhatsAppController {
 
     private final FinanceService financeService;
@@ -19,9 +18,9 @@ public class WhatsAppController {
 
     @PostMapping("/message")
     public String receiveMessage(
-            @RequestParam String message,
-            @RequestParam String user
-    ) {
-        return financeService.processMessage(message, user);
+            @RequestBody FinanceMessageDTO dto) {
+        return financeService.processMessage(dto.getMessage(), dto.getUser());
     }
+
+
 }
