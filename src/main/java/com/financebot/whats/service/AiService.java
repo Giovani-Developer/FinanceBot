@@ -2,7 +2,7 @@ package com.financebot.whats.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.financebot.whats.dto.FinanceMessageDTO;
+import com.financebot.whats.dto.AiResponseDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -23,58 +23,51 @@ public class AiService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public FinanceMessageDTO interpretMessage(String message) {
-
+    public AiResponseDTO interpretMessage(String message) {
         try {
             String prompt = """
-            Extraia os dados da mensagem abaixo.
+                    Extraia os dados da mensagem abaixo.
 
-            Responda SOMENTE em JSON válido, sem texto extra.
-            Campos:
-            - tipo (gasto ou receita)
-            - valor (number)
-            - categoria (string)
+                    Responda SOMENTE em JSON válido, sem texto extra.
+                    Campos:
+                    - tipo (gasto ou receita)
+                    - valor (number)
+                    - categoria (string)
 
-            Mensagem: "%s"
-            """.formatted(message);
+                    Mensagem: "%s"
+                    """.formatted(message);
 
             Map<String, Object> body = Map.of(
                     "contents", List.of(
-                            Map.of(
-                                    "parts", List.of(
-                                            Map.of("text", prompt)
-                                    )
-                            )
+                            Map.of("parts", List.of(
+                                    Map.of("text", prompt)
+                            ))
                     )
             );
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            HttpEntity<Map<String, Object>> request =
-                    new HttpEntity<>(body, headers);
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-            String url =
-                    "https://generativelanguage.googleapis.com/v1beta/models/"
-                            + "gemini-1.5-flash:generateContent?key=" + apiKey;
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/"
+                    + "gemini-2.0-flash-lite:generateContent?key=" + apiKey;
 
-            ResponseEntity<String> response =
-                    restTemplate.postForEntity(url, request, String.class);
+            ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
 
             JsonNode root = mapper.readTree(response.getBody());
 
             String content = root
-                    .path("candidates")
-                    .get(0)
-                    .path("content")
-                    .path("parts")
-                    .get(0)
-                    .path("text")
-                    .asText();
+                    .path("candidates").get(0)
+                    .path("content").path("parts").get(0)
+                    .path("text").asText()
+                    .replaceAll("```json", "").replaceAll("```", "").trim();
 
-            return mapper.readValue(content, FinanceMessageDTO.class);
+            return mapper.readValue(content, AiResponseDTO.class);
 
         } catch (Exception e) {
+            System.out.println("Erro no aiService: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }
