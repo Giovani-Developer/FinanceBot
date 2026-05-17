@@ -51,7 +51,7 @@ public class AiService {
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
             String url = "https://generativelanguage.googleapis.com/v1beta/models/"
-                    + "gemini-2.0-flash-lite:generateContent?key=" + apiKey;
+                    + "gemini-2.5-flash-lite:generateContent?key=" + apiKey;
 
             ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
 

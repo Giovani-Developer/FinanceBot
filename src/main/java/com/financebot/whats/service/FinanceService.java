@@ -94,11 +94,24 @@ public class FinanceService {
         LocalDateTime inicio = dataInicio != null ? dataInicio.atStartOfDay() : null;
         LocalDateTime fim = dataFim != null ? dataFim.plusDays(1).atStartOfDay() : null;
 
-        Page<FinanceRecord> page = repository.findHistorico(user, inicio, fim, categoria, tipo, pageable);
+        List<FinanceRecord> all = repository.findAllByUser(user);
 
-        return page.map(r -> new FinanceRecordDTO(
-                r.getId(), r.getTipo(), r.getValor(), r.getCategoria(), r.getCreatedAt()
-        ));
+        List<FinanceRecordDTO> filtered = all.stream()
+                .filter(r -> inicio == null || !r.getCreatedAt().isBefore(inicio))
+                .filter(r -> fim == null || !r.getCreatedAt().isAfter(fim))
+                .filter(r -> categoria == null || categoria.equalsIgnoreCase(r.getCategoria()))
+                .filter(r -> tipo == null || tipo.equalsIgnoreCase(r.getTipo()))
+                .map(r -> new FinanceRecordDTO(r.getId(), r.getTipo(), r.getValor(), r.getCategoria(), r.getCreatedAt()))
+                .toList();
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), filtered.size());
+
+        List<FinanceRecordDTO> pageContent = start >= filtered.size()
+                ? List.of()
+                : filtered.subList(start, end);
+
+        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, filtered.size());
     }
 
     // Resumo por categoria (agregacao feita em Java, nao JPQL)
