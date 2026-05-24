@@ -21,4 +21,10 @@ public class FinanceRecord {
     private String categoria;
 
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    //Parcelas
+    private Boolean parcelado = false;
+    private Integer totalParcelas;
+    private Integer parcelaAtual;
+    private Boolean pago = false;
 }

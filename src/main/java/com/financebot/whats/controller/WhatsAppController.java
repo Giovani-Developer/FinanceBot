@@ -28,9 +28,8 @@ public class WhatsAppController {
     }
 
     @PostMapping("/message")
-    public String receiveMessage(
-            @RequestBody FinanceMessageDTO dto) {
-        return financeService.processMessage(dto.getMessage(), dto.getUser());
+    public String receiveMessage(@RequestBody FinanceMessageDTO dto) {
+        return financeService.processMessage(dto);
     }
 
     @GetMapping("/resumo/{user}")
@@ -72,5 +71,14 @@ public class WhatsAppController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body("Transação não encontrada ou não pertence ao usuário");
+    }
+
+    @PatchMapping("/transacao/{id}/pagar")
+    public ResponseEntity<String> marcarComoPago(
+            @PathVariable Long id,
+            @RequestParam String user) {
+        boolean ok = financeService.marcarComoPago(id, user);
+        return ok ? ResponseEntity.ok("Marcado como pago!")
+                : ResponseEntity.notFound().build();
     }
 }

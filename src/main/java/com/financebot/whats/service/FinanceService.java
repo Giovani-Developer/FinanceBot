@@ -2,6 +2,7 @@ package com.financebot.whats.service;
 
 
 import com.financebot.whats.dto.AiResponseDTO;
+import com.financebot.whats.dto.FinanceMessageDTO;
 import com.financebot.whats.entity.FinanceRecord;
 import com.financebot.whats.dto.FinanceRecordDTO;
 import com.financebot.whats.repository.FinanceRepository;
@@ -27,23 +28,45 @@ public class FinanceService {
         this.aiService = aiService;
     }
 
-    public String processMessage(String message, String user) {
+    public String processMessage(FinanceMessageDTO dto) {
 
-        AiResponseDTO ai = aiService.interpretMessage(message);
+        AiResponseDTO ai = aiService.interpretMessage(dto.getMessage());
 
         if (ai == null) {
             return "Não consegui entender sua mensagem. Tente algo como: 'gastei 30 mercado'";
         }
 
         FinanceRecord record = new FinanceRecord();
-        record.setUserPhone(user);
+        record.setUserPhone(dto.getUser());
         record.setTipo(ai.getTipo());
         record.setValor(ai.getValor());
         record.setCategoria(ai.getCategoria());
 
+        if (Boolean.TRUE.equals(dto.getParcelado())) {
+            record.setParcelado(true);
+            record.setTotalParcelas(dto.getTotalParcelas());
+            record.setParcelaAtual(dto.getParcelaAtual() != null ? dto.getParcelaAtual() : 1);
+            record.setPago(false);
+        }
+
         repository.save(record);
 
-        return "Anotado! " + ai.getTipo() + " de R$ " + ai.getValor() + " em " + ai.getCategoria();
+        String resposta = "Anotado! " + ai.getTipo() + " de R$ " + ai.getValor() + " em " + ai.getCategoria();
+        if (Boolean.TRUE.equals(dto.getParcelado())) {
+            double valorTotal = ai.getValor() * dto.getTotalParcelas();
+            resposta += " | Parcela " + record.getParcelaAtual() + "/" + dto.getTotalParcelas()
+                    + " | Total: R$ " + String.format("%.2f", valorTotal);
+        }
+        return resposta;
+    }
+
+    // Marcar parcela como paga
+    public boolean marcarComoPago(Long id, String user) {
+        return repository.findByIdAndUserPhone(id, user).map(record -> {
+            record.setPago(true);
+            repository.save(record);
+            return true;
+        }).orElse(false);
     }
 
     public String getResumo(String user) {
@@ -101,7 +124,10 @@ public class FinanceService {
                 .filter(r -> fim == null || !r.getCreatedAt().isAfter(fim))
                 .filter(r -> categoria == null || categoria.equalsIgnoreCase(r.getCategoria()))
                 .filter(r -> tipo == null || tipo.equalsIgnoreCase(r.getTipo()))
-                .map(r -> new FinanceRecordDTO(r.getId(), r.getTipo(), r.getValor(), r.getCategoria(), r.getCreatedAt()))
+                .map(r -> new FinanceRecordDTO(
+                        r.getId(), r.getTipo(), r.getValor(), r.getCategoria(), r.getCreatedAt(),
+                        r.getParcelado(), r.getTotalParcelas(), r.getParcelaAtual(), r.getPago()
+                ))
                 .toList();
 
         int start = (int) pageable.getOffset();
