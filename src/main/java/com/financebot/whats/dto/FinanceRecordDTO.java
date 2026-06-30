@@ -65,7 +65,7 @@ public class FinanceRecordDTO {
 
     // Calculo do valor restante das parcelas
     public Double getValorRestante() {
-        if(!Boolean.TRUE.equals(parcelado) || totalParcelas == null) return null;
-        return valor * totalParcelas;
+        if (!Boolean.TRUE.equals(parcelado) || totalParcelas == null || parcelaAtual == null) return null;
+        return valor * (totalParcelas - parcelaAtual);
     }
 }
