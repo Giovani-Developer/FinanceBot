@@ -81,4 +81,19 @@ public class WhatsAppController {
         return ok ? ResponseEntity.ok("Marcado como pago!")
                 : ResponseEntity.notFound().build();
     }
+
+    // Pagar próxima parcela
+    @PatchMapping("/transacao/{id}/proxima-parcela")
+    public ResponseEntity<String> pagarProximaParcela(
+            @PathVariable Long id,
+            @RequestParam String user) {
+        String resultado = financeService.pagarProximaParcela(id, user);
+        return ResponseEntity.ok(resultado);
+    }
+
+    // Listar parcelas ativas
+    @GetMapping("/parcelas-ativas/{user}")
+    public List<FinanceRecordDTO> getParcelasAtivas(@PathVariable String user) {
+        return financeService.getParcelasAtivas(user);
+    }
 }

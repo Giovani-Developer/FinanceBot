@@ -170,6 +170,45 @@ public class FinanceService {
             categoriasMap.get(cat)[2]++;
         }
 
+
+        // Pagar próxima parcela (incrementa parcelaAtual)
+        public String pagarProximaParcela(Long id, String user) {
+            return repository.findByIdAndUserPhone(id, user).map(record -> {
+                if (!Boolean.TRUE.equals(record.getParcelado())) {
+                    return "Transação não é parcelada";
+                }
+                if (Boolean.TRUE.equals(record.getPago())) {
+                    return "Parcelamento já concluído";
+                }
+
+                int proxima = record.getParcelaAtual() + 1;
+                record.setParcelaAtual(proxima);
+
+                if (proxima >= record.getTotalParcelas()) {
+                    record.setPago(true);
+                }
+
+                repository.save(record);
+
+                if (Boolean.TRUE.equals(record.getPago())) {
+                    return "Última parcela paga! Parcelamento concluído.";
+                }
+                return "Parcela " + proxima + "/" + record.getTotalParcelas() + " paga! "
+                        + "Falta R$ " + String.format("%.2f", record.getValor() * (record.getTotalParcelas() - proxima));
+            }).orElse("Transação não encontrada");
+        }
+
+// Listar parcelas ativas (não concluídas)
+        public List<FinanceRecordDTO> getParcelasAtivas(String user) {
+            return repository.findAllByUser(user).stream()
+                    .filter(r -> Boolean.TRUE.equals(r.getParcelado()) && !Boolean.TRUE.equals(r.getPago()))
+                    .map(r -> new FinanceRecordDTO(
+                            r.getId(), r.getTipo(), r.getValor(), r.getCategoria(), r.getCreatedAt(),
+                            r.getParcelado(), r.getTotalParcelas(), r.getParcelaAtual(), r.getPago()
+                    ))
+                    .toList();
+        }
+
         return categoriasMap.entrySet().stream()
                 .map(e -> new com.financebot.whats.dto.CategoriaResumoDTO(
                         e.getKey(), e.getValue()[0], e.getValue()[1], e.getValue()[2].longValue()
