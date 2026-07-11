@@ -35,6 +35,8 @@ public class WhatsAppController {
 
     @PostMapping("/message")
     public String receiveMessage(@RequestBody FinanceMessageDTO dto) {
+        System.out.println(">>> Entrou no endpoint /finance/message");
+        System.out.println(dto.getMessage());
         dto.setUser(getEmail());
         return financeService.processMessage(dto);
     }
