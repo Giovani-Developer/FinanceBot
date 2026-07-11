@@ -58,6 +58,17 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 System.out.println("AUTENTICADO!");
 
+                System.out.println("auth.isAuthenticated() = " + auth.isAuthenticated());
+                System.out.println("context.isAuthenticated() = " +
+                        SecurityContextHolder.getContext().getAuthentication().isAuthenticated());
+
+                System.out.println("classe = " +
+                        SecurityContextHolder.getContext().getAuthentication().getClass().getName());
+
+                SecurityContextHolder.getContext().setAuthentication(auth);
+
+                System.out.println("AUTENTICADO!");
+
             } catch (Exception e) {
 
                 System.out.println("ERRO JWT");
