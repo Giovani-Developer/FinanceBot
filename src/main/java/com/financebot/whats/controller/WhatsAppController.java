@@ -1,3 +1,5 @@
+package com.financebot.whats.controller;
+
 import com.financebot.whats.dto.CategoriaResumoDTO;
 import com.financebot.whats.dto.FinanceMessageDTO;
 import com.financebot.whats.dto.FinanceRecordDTO;
